@@ -89,7 +89,7 @@ pub fn encrypt(data: &str, password: &str) -> Result<String, String> {
 
     // 3. Dériver la clé depuis le mot de passe + sel
     let key_bytes = derive_key(password, &salt);          // avec la fonction précédente, on vient dériver la clée depuis le mdp et le sel
-    let key = Key::<Aes256Gcm>::from_slice(&key_bytes);   // 
+    let key = Key::<Aes256Gcm>::from_slice(&key_bytes);   // on récupere la clée
 
     // 4. Créer le chiffreur AES-256-GCM
     let cipher = Aes256Gcm::new(key);
@@ -98,7 +98,7 @@ pub fn encrypt(data: &str, password: &str) -> Result<String, String> {
     // 5. Chiffrer les données
     let encrypted = cipher
         .encrypt(nonce, data.as_bytes())
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())?;   // avec gestion d'erreur
 
     // 6. Assembler : sel + nonce + données chiffrées
     let mut combined = Vec::new();
