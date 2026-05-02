@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
 
   let isFirstLaunch: boolean | null = null;
   let password = '';
@@ -53,7 +54,7 @@
     try {
       const ok = await invoke('tauri_verify_master', { password });
       if (ok) {
-        alert('✅ Bienvenue dans BetterPigeon !');
+        goto('/app');
       } else {
         error = 'Mot de passe incorrect';
       }
