@@ -1,5 +1,59 @@
 <script lang="ts">
-  const platforms = ['Signal', 'Matrix', 'WhatsApp', 'Instagram', 'Facebook'];
+  import { invoke } from '@tauri-apps/api/core';
+  import { onMount } from 'svelte';
+
+  // État de l'app
+  let isFirstLaunch = false;
+  let password = '';
+  let error = '';
+  let loading = false;
+
+  // Au chargement de la page :
+  // on demande à Rust si c'est le premier lancement
+  onMount(async () => {
+    isFirstLaunch = await invoke('tauri_is_first_launch');
+  });
+
+  // Créer le mot de passe maître (premier lancement)
+  async function setupMaster() {
+    if (password.length < 8) {
+      error = 'Le mot de passe doit faire au moins 8 caractères';
+      return;
+    }
+    loading = true;
+    error = '';
+    try {
+      await invoke('tauri_setup_master', { password });
+      isFirstLaunch = false;
+    } catch (e) {
+      error = 'Erreur lors de la création : ' + e;
+    }
+    loading = false;
+  }
+
+  // Vérifier le mot de passe (lancements suivants)
+  async function unlockApp() {
+    if (!password) {
+      error = 'Saisis ton mot de passe';
+      return;
+    }
+    loading = true;
+    error = '';
+    try {
+      const ok = await invoke('tauri_verify_master', { password });
+      if (ok) {
+        error = '';
+        alert('✅ Bienvenue dans BetterPigeon !');
+        // └── temporaire — remplacé par la vraie navigation
+        //     quand on codera l'inbox (Phase 7)
+      } else {
+        error = 'Mot de passe incorrect';
+      }
+    } catch (e) {
+      error = 'Erreur : ' + e;
+    }
+    loading = false;
+  }
 </script>
 
 <main>
@@ -7,11 +61,42 @@
   <h1>BetterPigeon</h1>
   <p class="tagline">Stay connected. Leave the cage.</p>
 
-  <div class="platforms">
-    {#each platforms as platform}
-      <span class="badge">{platform}</span>
-    {/each}
-  </div>
+  {#if isFirstLaunch}
+    <div class="card">
+      <h2>Crée ton mot de passe maître</h2>
+      <p class="hint">
+        Ce mot de passe protège toutes tes sessions.<br>
+        Il n'est stocké nulle part — ne l'oublie pas.
+      </p>
+      <input
+        type="password"
+        placeholder="Minimum 8 caractères"
+        bind:value={password}
+        on:keydown={(e) => e.key === 'Enter' && setupMaster()}
+      />
+      <button on:click={setupMaster} disabled={loading}>
+        {loading ? 'Création...' : 'Créer'}
+      </button>
+    </div>
+
+  {:else}
+    <div class="card">
+      <h2>Bienvenue</h2>
+      <input
+        type="password"
+        placeholder="Ton mot de passe maître"
+        bind:value={password}
+        on:keydown={(e) => e.key === 'Enter' && unlockApp()}
+      />
+      <button on:click={unlockApp} disabled={loading}>
+        {loading ? 'Vérification...' : 'Ouvrir'}
+      </button>
+    </div>
+  {/if}
+
+  {#if error}
+    <p class="error">{error}</p>
+  {/if}
 </main>
 
 <style>
@@ -23,11 +108,11 @@
     height: 100vh;
     gap: 1rem;
     font-family: sans-serif;
+    background: #0f0f0f;
+    color: #ffffff;
   }
 
-  .logo {
-    font-size: 4rem;
-  }
+  .logo { font-size: 4rem; }
 
   h1 {
     font-size: 2rem;
@@ -35,23 +120,72 @@
   }
 
   .tagline {
-    color: #666;
+    color: #888;
     font-style: italic;
+    margin: 0;
   }
 
-  .platforms {
+  .card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 2rem;
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    width: 320px;
     margin-top: 1rem;
   }
 
-  .badge {
-    background: #f0f0f0;
-    border-radius: 999px;
-    padding: 0.3rem 0.8rem;
+  h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  .hint {
     font-size: 0.85rem;
+    color: #888;
+    text-align: center;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  input {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: #555; }
+
+  button {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  button:hover:not(:disabled) { opacity: 0.85; }
+
+  .error {
+    color: #ff4444;
+    font-size: 0.9rem;
+    margin: 0;
   }
 </style>
-

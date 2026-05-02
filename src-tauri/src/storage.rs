@@ -60,7 +60,7 @@ pub fn init_db() -> SqlResult<()> {
 
     // Crée la table sessions si elle n'existe pas
     conn.execute_batch("
-        CREATE TABLE IF NOT EXISTS sessions (     // langage SQL
+        CREATE TABLE IF NOT EXISTS sessions (
             platform TEXT PRIMARY KEY,
             data     TEXT NOT NULL
         );
