@@ -2,19 +2,18 @@
   "name": "bridge",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --noEmit",
+    "bundle": "esbuild index.ts --bundle --platform=node --target=node18 --outfile=dist/bundle.js --format=cjs && pkg dist/bundle.js --target node18-linux-x64 --output ../src-tauri/binaries/bridge-x86_64-unknown-linux-gnu"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "matrix-js-sdk": "^41.4.0"
+    "matrix-js-sdk": "*"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
-    "typescript": "^6.0.3"
+    "@types/node": "*",
+    "typescript": "*",
+    "pkg": "*",
+    "esbuild": "*"
   }
 }

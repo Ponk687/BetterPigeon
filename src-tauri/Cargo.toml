@@ -34,3 +34,4 @@ base64 = "0.22"
 # Stockage
 rusqlite = { version = "0.31", features = ["bundled"] }
 dirs = "5.0"
+tauri-plugin-shell = "2.3.5"
