@@ -44,6 +44,7 @@
 		"vitest-browser-svelte": "^2.0.2"
 	},
 	"dependencies": {
+		"@sveltejs/adapter-static": "^3.0.10",
 		"@tauri-apps/api": "^2.11.0"
 	}
 }

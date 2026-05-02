@@ -1,20 +1,32 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core';
   import { onMount } from 'svelte';
 
-  // État de l'app
-  let isFirstLaunch = false;
+  let isFirstLaunch: boolean | null = null;
   let password = '';
   let error = '';
   let loading = false;
 
-  // Au chargement de la page :
-  // on demande à Rust si c'est le premier lancement
-  onMount(async () => {
-    isFirstLaunch = await invoke('tauri_is_first_launch');
+  onMount(() => {
+    // On attend que __TAURI__ soit disponible
+    const check = setInterval(async () => {
+      if ((window as any).__TAURI__) {
+        clearInterval(check);
+        try {
+          const result = await (window as any).__TAURI__.core.invoke('tauri_is_first_launch');
+          console.log('isFirstLaunch:', result);
+          isFirstLaunch = result;
+        } catch(e) {
+          console.error('Erreur:', e);
+          isFirstLaunch = false;
+        }
+      }
+    }, 100);
   });
 
-  // Créer le mot de passe maître (premier lancement)
+  async function invoke(cmd: string, args?: object) {
+    return (window as any).__TAURI__.core.invoke(cmd, args);
+  }
+
   async function setupMaster() {
     if (password.length < 8) {
       error = 'Le mot de passe doit faire au moins 8 caractères';
@@ -26,12 +38,11 @@
       await invoke('tauri_setup_master', { password });
       isFirstLaunch = false;
     } catch (e) {
-      error = 'Erreur lors de la création : ' + e;
+      error = 'Erreur : ' + e;
     }
     loading = false;
   }
 
-  // Vérifier le mot de passe (lancements suivants)
   async function unlockApp() {
     if (!password) {
       error = 'Saisis ton mot de passe';
@@ -42,10 +53,7 @@
     try {
       const ok = await invoke('tauri_verify_master', { password });
       if (ok) {
-        error = '';
         alert('✅ Bienvenue dans BetterPigeon !');
-        // └── temporaire — remplacé par la vraie navigation
-        //     quand on codera l'inbox (Phase 7)
       } else {
         error = 'Mot de passe incorrect';
       }
@@ -61,7 +69,14 @@
   <h1>BetterPigeon</h1>
   <p class="tagline">Stay connected. Leave the cage.</p>
 
-  {#if isFirstLaunch}
+  {#if isFirstLaunch === null}
+    <!-- Chargement -->
+    <div class="card">
+      <p class="hint">Chargement...</p>
+    </div>
+
+  {:else if isFirstLaunch === true}
+    <!-- Premier lancement -->
     <div class="card">
       <h2>Crée ton mot de passe maître</h2>
       <p class="hint">
@@ -80,6 +95,7 @@
     </div>
 
   {:else}
+    <!-- Lancements suivants -->
     <div class="card">
       <h2>Bienvenue</h2>
       <input

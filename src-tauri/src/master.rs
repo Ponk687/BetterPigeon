@@ -131,8 +131,10 @@ pub fn verify_master(password: &str) -> Result<bool, String> {
 
 
 #[tauri::command]
-pub fn tauri_is_first_launch() -> bool {
-    is_first_launch()
+pub fn tauri_is_first_launch() -> Result<bool, String> {
+    let result = is_first_launch();
+    log::info!("is_first_launch: {}", result);
+    Ok(result)
 }
 
 #[tauri::command]
@@ -143,4 +145,9 @@ pub fn tauri_setup_master(password: String) -> Result<(), String> {
 #[tauri::command]
 pub fn tauri_verify_master(password: String) -> Result<bool, String> {
     verify_master(&password)
+}
+
+#[tauri::command]
+pub fn tauri_test() -> bool {
+    true
 }
