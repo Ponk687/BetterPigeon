@@ -3,9 +3,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 // Déclare le module crypto
-// Rust va chercher src/crypto.rs automatiquement
+// Rust va chercher ces fichiers automatiquement
 mod crypto;
 mod storage;
+mod master;
 
 fn main() {
     // Initialiser la base de données au lancement
@@ -22,6 +23,9 @@ fn main() {
             storage::tauri_get_session,
             storage::tauri_delete_session,
             storage::tauri_list_sessions,
+            master::tauri_is_first_launch,
+            master::tauri_setup_master,
+            master::tauri_verify_master,
         ])
         .run(tauri::generate_context!())
         .expect("Erreur au lancement de BetterPigeon");

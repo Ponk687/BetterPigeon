@@ -9,6 +9,7 @@ use crate::crypto;
 // └── permet d'afficher la struct avec {:?}
 //     utile pour le débogage
 
+#[allow(dead_code)]
 pub struct Session {        // pub pour etre utilisable dans les autres programmes
     pub platform: String,  // "signal", "matrix", etc.
     pub data: String,      // token chiffré en base64
